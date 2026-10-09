@@ -288,8 +288,9 @@ export default function App(){
     const{data:l}=supabase.auth.onAuthStateChange((_,s)=>setSession(s));return()=>l.subscription.unsubscribe()},[]);
   const[blocked,setBlocked]=useState('');
   useEffect(()=>{if(!session)return setProfile(null);
-    supabase.from('profiles').select('*').eq('id',session.user.id).single().then(({data})=>{
-      if(data?.disabled){setBlocked('This account has been disabled. Contact your owner or supervisor.');supabase.auth.signOut();setProfile(null);}
+    supabase.from('profiles').select('*').eq('id',session.user.id).maybeSingle().then(({data})=>{
+      if(!data){setBlocked('We could not find your account profile. Please sign in again, or ask your owner to recreate it.');supabase.auth.signOut();setProfile(null);}
+      else if(data.disabled){setBlocked('This account has been disabled. Contact your owner or supervisor.');supabase.auth.signOut();setProfile(null);}
       else setProfile(data)})},[session]);
   const toast=t=>{setMsg(t);setTimeout(()=>setMsg(''),3500)};
   const toggle=<button className="btn ghost" onClick={()=>setTheme(theme==='dark'?'light':'dark')}>{theme==='dark'?'Light mode':'Dark mode'}</button>;
